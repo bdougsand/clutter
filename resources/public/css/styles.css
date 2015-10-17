@@ -1,0 +1,197 @@
+body {
+    font-family: "Lucida Grande", sans-serif;
+    font-size: 10pt;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    background-color: blue;
+    color: white;
+}
+
+#header {
+    text-align: right;
+    width: 100%;
+    border-bottom: 1px solid black;
+}
+
+#body {
+    width: 800px;
+    margin: auto;
+    position: relative;
+}
+
+#output {
+    position: absolute;
+    right: 0;
+    top: 40px;
+    height: 360px;
+    width: 330px;
+    border: 1px solid black;
+    font-size: 10pt;
+    padding: 5px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#loc_mount {
+    width: 450px;
+    display: inline-block
+}
+
+#location {
+    height: 400px;
+    background-color: #eee;
+    position: relative;
+}
+
+#loc_name {
+    background-color: white;
+    font-size: x-large;
+    font-weight: bold;
+}
+
+#loc_desc {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+#loc_exits {
+    position: absolute;
+    padding-top: 20px;
+    padding: 5px;
+    right: 10px;
+}
+
+#loc_things {
+    position: absolute;
+    padding-top: 20px;
+    padding: 5px;
+    left: 10px;
+}
+
+div.thing  .name {
+    color: purple;
+}
+
+.summary_list {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding-top: 8px;
+    height: 30px;
+    background-color: white;
+}
+
+.summary_list span {
+    padding: 3px;
+    padding-left: 5px;
+    padding-right: 5px;
+    font-weight: bold;
+    position: relative;
+}
+
+span.label {
+    color: white;
+    background-color: navy;
+    margin-right: 10px;
+}
+
+span.summary {
+    margin-right: 5px;
+    border: 1px solid gray;
+    border-radius: 4px;
+}
+
+span.user.offline {
+    background-color: lightgray;
+    opacity: 0.5;
+}
+
+span.user.online {
+    color: blue;
+}
+
+#input {
+    width: 100%;
+}
+
+.message {
+    position: relative;
+    margin-top: 2px;
+}
+
+.message.error {
+    color: red;
+    font-style: italic;
+}
+
+.message.status {
+    font-style: italic;
+}
+
+span.actor {
+    color: maroon;
+    font-weight: bold;
+}
+
+
+/* Popups */
+.prop_popup {
+    position: absolute;
+    border: 1px solid black;
+    background-color: white;
+    padding: 5px;
+    border-radius: 5px;
+    width: 400px;
+    box-shadow: -2px 2px 4px gray;
+}
+
+.popup_title {
+    background-color: navy;
+    color: white;
+    font-weight: bold;
+    padding: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    cursor: grab;
+    cursor: -webkit-grab;
+}
+
+.prop_popup.dragging .popup_title {
+    cursor: grabbing;
+    cursor: -webkit-grabbing;
+}
+
+.popup_close {
+    float: right;
+    color: white;
+}
+
+.prop_editor {
+    display: table;
+}
+
+.prop {
+    display: table-row;
+}
+
+.propname, .propval {
+    display: table-cell;
+    padding: 5px;
+}
+
+.propname {
+    vertical-align: middle;
+    font-weigt: bold;
+    background-color: #eee;
+    border: 1px solid gray;
+    border-top: none;
+}
+
+.propval {
+}

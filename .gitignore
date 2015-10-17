@@ -1,0 +1,13 @@
+/resources/public/js/*
+/pom.xml
+*jar
+*.log*
+/lib
+/classes
+/native
+/checkouts
+/.nrepl-port
+/.lein-*
+/log
+.#*
+\#*

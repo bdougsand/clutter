@@ -1,0 +1,54 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>GlitterMU</title>
+    <link rel="stylesheet" href="/css/styles.css" type="text/css" media="screen" />
+  </head>
+  <body>
+    <form method="post" action="/login">
+      <div id="flash"></div>
+      <table>
+        <thead>
+          <tr>
+            <td colspan="2">
+              Login:
+            </td>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>
+              <label for="username">User:</label>
+            </td>
+            <td>
+              <input type="text" name="username" id="username"/>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <label for="userpw">Password:</label>
+            </td>
+            <td>
+              <input type="password" name="password" id="userpw"/>
+            </td>
+          </tr>
+
+          <tr>
+            <td colspan="2" align="right">
+              <input type="submit" value="Login"/>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2">
+              If the specified user does not exist, a new one will be
+              created.
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </form>
+  </body>
+</html>
