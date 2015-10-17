@@ -4,6 +4,7 @@
             [environ.core :refer [env]]
 
             [clutter.core]
+            [clutter.db :as db]
             [clutter.store :as store]))
 
 (def stop-server-fn (atom nil))
@@ -19,14 +20,18 @@
             (when f (f))
             (run-server #'clutter.core/app {:port port}))))
   ([]
-   (start-server port)))
+   (start-server (:port env))))
 
 (defn start-with-db
-  [in]
-  (store/load-db! in)
-  (start-server port))
+  ([in port]
+   (store/load-db! in)
+   (start-server port))
+  ([in]
+   (start-with-db in (:port env))))
 
 (defn start-with-default
-  []
-  (store/load-default-db!)
-  (start-server port))
+  ([port]
+   (store/load-default-db!)
+   (start-server port))
+  ([]
+   (start-with-default (:port env))))

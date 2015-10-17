@@ -50,5 +50,8 @@
 
              :css-dirs ["resources/public/css"]}
 
+  :env {:port 3338}
+
   :profiles {:dev {:plugins [[lein-figwheel "0.4.1"]
-                             [refactor-nrepl "1.1.0"]]}})
+                             [refactor-nrepl "1.1.0"]]
+                   :env {:dev true}}})
