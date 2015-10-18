@@ -1,5 +1,5 @@
-(ns glittermu.test.core
-  (:use [glittermu.core])
+(ns clutter.test.core
+  (:use [clutter.core])
   (:use [clojure.test]))
 
 (deftest replace-me ;; FIXME: write
