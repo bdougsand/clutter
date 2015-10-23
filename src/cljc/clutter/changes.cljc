@@ -19,18 +19,21 @@
 
     (let [add (:$add change)
           rem (:$rem change)]
-      (if (or add rem)
-        (set
-         (cond-> v
-                 add (concat add)
-                 rem (as-> v (remove (set rem) v))))
+      (if (and rem (map? v))
+        (apply dissoc v rem)
 
-        (if (map? change)
-          (persistent!
-           (reduce-kv (fn [m k ch] (assoc! m k (apply-change (get v k) ch)))
-                      (transient (or v {})) change))
+        (if (or add rem)
+          (set
+           (cond-> v
+             add (concat add)
+             rem (as-> v (remove (set rem) v))))
 
-          change)))))
+          (if (map? change)
+            (persistent!
+             (reduce-kv (fn [m k ch] (assoc! m k (apply-change (get v k) ch)))
+                        (transient (or v {})) change))
+
+            change))))))
 
 (defn merge-changes
   [ch1 ch2]
