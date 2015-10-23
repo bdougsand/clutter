@@ -2,7 +2,8 @@
   (:require [goog.dom :as dom]
             [goog.dom.classes :as classes]
             [goog.string :as string]
-            [goog.string.linkify :as linkify]))
+            [goog.string.linkify :as linkify]
+            [goog.style :as style]))
 
 ;; Make HTML types seqable.
 (extend-protocol ISeqable
@@ -71,3 +72,10 @@
 
 (defn match-urls [s]
   (match-seq url-re s))
+
+(defn should-scroll? [elt]
+  (let [lc-height (or (some-> (dom/getLastElementChild elt)
+                              (style/getSize)
+                              .-height)
+                      15)]
+    (<= (scroll-dist-from-bottom elt) (+ lc-height 5))))
