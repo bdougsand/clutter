@@ -6,6 +6,7 @@
 /classes
 /native
 /checkouts
+/target
 /.nrepl-port
 /.lein-*
 /log
