@@ -1,34 +1,27 @@
 (ns clutter.core
-  (:require [clojure.core.async :refer [<! >! go go-loop] :as async]
-            [clojure.string :as str]
-
-            [environ.core :refer [env]]
-
-            [chord.http-kit :refer [with-channel]]
-
-            [org.httpkit.server :refer [run-server]]
-
-            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-            [ring.middleware.params :refer [wrap-params]]
-            [ring.middleware.session :refer [wrap-session]]
-            [ring.util.response :as response]
-
-            [cemerick.friend :as friend]
-            [cemerick.friend.workflows :as workflows]
+  (:require [cemerick.friend :as friend]
             [cemerick.friend.credentials :as creds]
-
-            [compojure.core :refer [defroutes GET POST rfn]]
-            [compojure.route :refer [resources]]
-
-            [taoensso.timbre :as timbre :refer [info warn error]]
-            [taoensso.timbre.appenders.core :as appenders]
-
+            [cemerick.friend.workflows :as workflows]
+            [chord.http-kit :refer [with-channel]]
+            [clojure.core.async :refer [<! >! go go-loop] :as async]
+            [clojure.string :as str]
             [clutter.commands :as cmd]
             [clutter.config :as config]
             [clutter.db :as db]
             [clutter.messages :as msg]
             [clutter.templates :as t]
-            [clutter.utils :as $ :refer [wrap-exceptions wrap-log]]))
+            [clutter.utils :as $ :refer [wrap-exceptions wrap-log]]
+            [compojure.core :refer [defroutes GET POST rfn]]
+            [compojure.route :refer [resources]]
+            [com.stuartsierra.component :as component]
+            [environ.core :refer [env]]
+            [org.httpkit.server :refer [run-server]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.session :refer [wrap-session]]
+            [ring.util.response :as response]
+            [taoensso.timbre.appenders.core :as appenders]
+            [taoensso.timbre :as timbre :refer [info warn error]]))
 
 (timbre/merge-config!
  {:level :info
@@ -191,7 +184,18 @@
              wrap-params
              wrap-exceptions))
 
-(defn -main [& [cmd & args]]
-  (let [port (:port env 3337)]
-    (run-server #'app {:port port})
-    (info "Started server on port " port)))
+(defrecord Clutter []
+  component/Lifecycle
+  (start [this]
+    (assoc this :server (run-server #'app {:port (:port env 3338)})))
+
+  (stop [this]
+    (when-let [server (:server this)]
+      (server))
+    (dissoc this :server)))
+
+(defn create-system []
+  (Clutter.))
+
+(defn -main [& args]
+  (.start (create-system)))
