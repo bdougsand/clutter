@@ -1,6 +1,6 @@
 (ns clutter.connection
   (:require [cljs.core.async :refer [>! <! chan close!
-                                     dropping-buffer mult put!
+                                     dropping-buffer mult pub put!
                                      sliding-buffer take! tap]
              :as async]
 
@@ -22,6 +22,7 @@
 
 (defonce db-chan (chan (sliding-buffer 1)))
 (defonce db-mult (mult db-chan))
+;(defonce db-pub (pub db-chan key (s)))
 
 (defn db-get-cache
   [id]
@@ -33,6 +34,7 @@
    (let [result (get-in @app-state [:db-cache id])]
      ;; Always put something on the channel:
      ;; (What if the object doesn't exist?
+     (prn "fetching" id)
      (put! c (or result {}))
      (when (put! @connection {:dbq id})
        (go
@@ -44,7 +46,8 @@
                (when (or (= new-result last)
                          (put! c new-result))
                  (recur new-result))))
-           (close! in))))))
+           (close! in)))))
+   c)
   ([id]
    (db-get id (chan (sliding-buffer 1)))))
 
@@ -53,19 +56,6 @@
   satisfy the given query. "
   [q]
   false)
-
-(defn query
-  [q]
-  (let [c (chan)]
-    (put! c (query/query (:db-cache @app-state) q))
-    ;; Now perform the query on the server and feed the result into the
-    ;; channel:
-    (if (cache-good? q)
-      (close! c)
-
-      (take! (db-query q) (fn [result]
-                                 (put! c result)
-                                 (close! c))))))
 
 (defn send-message!
   [msg]
@@ -95,7 +85,7 @@
                       (alt! request-chan ([q] (recur (cons q queries) timer))
                             timer queries)))]
       ;; Send the consolidated query to the server
-      (send-message! {:dbq queries})
+      (send-message! {:dbq (vec queries)})
       (recur))))
 
 (defn connect!

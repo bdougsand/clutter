@@ -9,6 +9,8 @@
       :props {:description {:string "A void."
                             :publish true}}}})
 
+(defn create-db [] base-db)
+
 (def john
   {:type :user
    :name "John"
@@ -27,3 +29,11 @@
              (get-in [0 :contents]))
          #{1})
       "Adding contents did not work."))
+
+(deftest remove-key
+  (is (= (apply-change base-db {:$rem [0]})
+         {})))
+
+(deftest multiple-changes
+  (is (= (-> (apply-change base-db
+                           {})))))

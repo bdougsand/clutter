@@ -9,7 +9,6 @@
             [clutter.view.brief :refer [brief-view]])
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
-
 (defn sidebar-view [app owner]
   (reify
       om/IWillMount
@@ -17,8 +16,9 @@
         (let [in (db-get (:user-id app))]
           (om/set-state! owner :in in)
           (go-loop []
-            (om/set-state! owner :what (<! in))
-            (recur))))
+            (when-let [what (<! in)]
+              (om/set-state! owner :what what)
+              (recur)))))
 
       om/IWillUnmount
       (will-unmount [_]
@@ -29,4 +29,5 @@
         (html
          [:div.sidebar
           (when-let [selection (some-> what :location)]
-            (om/build brief-view app {:dbid selection}))]))))
+
+            (om/build brief-view app {:state {:dbid selection}}))]))))

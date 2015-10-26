@@ -39,6 +39,7 @@
                         :source-paths ["src/cljs" "src/cljc"]
                         :figwheel {:on-jsreload "clutter.core/on-js-reload"}
                         :compiler {:main clutter.core
+                                   :asset-path "js/out"
                                    :output-to "resources/public/js/app.js"
                                    :output-dir "resources/public/js/out"
                                    :optimizations :none

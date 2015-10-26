@@ -5,11 +5,13 @@
 
             [sablono.core :as html :refer-macros [html]]
 
-            [clutter.connection :refer [db-get query]]
+            [clutter.connection :refer [db-get]]
             [clutter.db :as db])
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
-(defn brief-multi-view [])
+(defn brief-multi-view
+  "View for multiple selection."
+  [])
 
 ;; TODO: Macro or wrapper function to get rid of async get boilerplate.
 (defn name-view [_ owner]
@@ -28,12 +30,13 @@
 
       om/IRenderState
       (render-state [_ {:keys [what]}]
-        [:div.object-name {:class (str (:type what))}
-         (:name what)])))
+        (html
+         [:div.object-name {:class (str (:type what))}
+          (:name what)]))))
 
 (defn build-name [id]
-  (om/build name-view what {:react-key id,
-                            :dbid id}))
+  (om/build name-view nil {:react-key id,
+                           :state {:dbid id}}))
 
 (defn brief-view
   "Renders the description of a selected object."
@@ -59,5 +62,4 @@
            (db/get-prop-string what :description)]
           (when (:contents what)
             [:div.contents
-             (map build-name (map (partial db/get-object )))
              (map build-name (:contents what))])]))))

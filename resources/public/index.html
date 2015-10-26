@@ -9,24 +9,18 @@
     </div>
 
     <div id= "body">
-      <div id= "loc_mount">
-        <div id= "location">
-          <h3 id= "loc_name"></h3>
-          <div id= "loc_desc"></div>
-          <div id= "loc_contents"></div>
-        </div>
+      <div id="loc_mount"> </div>
+
+      <div id="sidebar"> </div>
+
       </div>
-      <div id="output"></div>
+      <br/>
       <textarea id="input"></textarea>
     </div>
 
-    <div id="prop_editors"></div>
-
-    <script src= "/js/lib/react-0.12.2.js"></script>
-    <script src="/js/out/goog/base.js" type="text/javascript"></script>
     <script src="/js/app.js" type="text/javascript"></script>
     <script type="text/javascript">
-      goog.require("clutter.core");
+      clutter.core.init();
     </script>
   </body>
 </html>

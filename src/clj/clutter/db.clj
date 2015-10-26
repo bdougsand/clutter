@@ -9,6 +9,7 @@
             [taoensso.timbre :refer [info]]
 
             [clutter.changes :refer [apply-change merge-changes]]
+            [clutter.query :as query]
             [clutter.utils :refer [ref?]])
   (:refer-clojure :exclude [name]))
 
@@ -37,33 +38,13 @@
 (defn ->dbid [x]
   (if (ref? x) (:id @x) x))
 
-(def dbref? ref?)
 
-(defn deep-merge
-  "Painfully simple 'deep merge' of "
-  [m1 m2]
-  (if (and (map? m1) (map? m2))
-    (merge-with deep-merge m1 m2)
-    m1))
 
 (declare db-summary)
 (defn query
-  ;; TODO: Potential optimization: Merge the queries rather than the
-  ;; results to avoid redundant lookups.
-  ([m q]
-     (cond
-      (integer? q) (db-summary (get m q))
-      (keyword? q) {q (get m q)}
-      (vector? q) (reduce deep-merge (map (partial query m) q))
-      (map? q) (reduce-kv
-                (fn [r k v]
-                  (let [q (query (let [x (get m k)]
-                                   (if (dbref? x) (deref x) x)) v)]
-                    (assoc r k (if-let [old (get r k)]
-                                 (deep-merge q old)
-                                 q))))
-                {} q)))
-  ([q] (query @db q)))
+  [q]
+  (query/query db-summary @db q))
+
 
 (defn push-changes!
   "Apply changesets to objects in the database. db-changes should be a

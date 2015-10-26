@@ -1,19 +1,15 @@
-(ns clutter.core
+(ns ^:figwheel-always clutter.core
   (:require [cljs.core.async :refer [>! <! chan dropping-buffer
                                      mult put! tap] :as async]
             [clojure.set :as set]
             [clojure.string :as str]
 
-            [goog.date.relative :as rel]
-            [goog.dom :as dom]
-            [goog.dom.classes :as classes]
             [goog.events :as events]
             [goog.events.KeyCodes :as keycode]
             [goog.string :as string]
             [goog.style :as style]
 
             [om.core :as om :include-macros true]
-            [om.dom :as om-dom :include-macros true]
 
             [figwheel.client :as fw]
 
@@ -55,21 +51,21 @@
 
 
 
-(defn init []
+(defn main[]
   (unlisten!)
   (connection/init)
   (setup-input!)
-  (setup-clicks!)
 
   ;; Mount views:
 
   (om/root room-view app-state
-         {:target ($/by-id "loc_mount")}))
+           {:target ($/by-id "loc_mount")})
+  (om/root sidebar-view app-state
+           {:target ($/by-id "sidebar")}))
 
-(init)
+(defn on-js-reload []
+  (println "Reloaded")
+  (main))
 
-
-(fw/start {:on-jsload (fn []
-                        (println "Reloaded JavaScript.")
-                        (init))
-           :websocket-url (str "ws://" (.-hostname js/location) ":3447/figwheel-ws")})
+(defn init []
+  (main))
