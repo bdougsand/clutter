@@ -13,3 +13,10 @@
          (filter :export)
          (map #(dissoc % :line :column :file :ns)))
    (all-vars)))
+
+(defn add-arg-docs [v]
+  (into {} (comp cat
+                 (filter meta)
+                 (map (fn [s]
+                        [s (meta s)])))
+        (:arglists v)))
