@@ -1,7 +1,8 @@
 (ns clutter.dev.docs)
 
 (def namespaces
-  #{'clutter.render.canvas})
+  #{'clutter.render.canvas
+    'clojure.core})
 
 (defn all-vars []
   (vals (apply merge (map (comp ns-publics find-ns) namespaces))))

@@ -3,31 +3,27 @@
                                      mult put! tap] :as async]
             [clojure.set :as set]
             [clojure.string :as str]
-
-            [goog.events :as events]
-            [goog.events.KeyCodes :as keycode]
-            [goog.string :as string]
-            [goog.style :as style]
-
-            [om.core :as om :include-macros true]
-
-            [figwheel.client :as fw]
-
+            [clutter.connection :as connection :refer [app-state send-message!]]
+            [clutter.utils :as $]
             [clutter.view.brief :refer [brief-view]]
+            [clutter.view.editor :refer [editor-view]]
             [clutter.view.room :refer [room-view]]
             [clutter.view.sidebar :refer [sidebar-view]]
+            [figwheel.client :as fw]
+            [goog.events.KeyCodes :as keycode]
+            [goog.events :as events]
+            [goog.string :as string]
+            [goog.style :as style]
+            [om.core :as om :include-macros true]
 
-            [clutter.connection :as connection :refer [app-state send-message!]]
-            [clutter.utils :as $])
+            [cljsjs.codemirror.mode.clojure])
   (:require-macros [cljs.core.async.macros :refer [alt! go go-loop]]))
-
 
 (enable-console-print!)
 
 (defonce listener-keys (atom nil))
 (defonce command-history (atom {:position 0
                                 :input  []}))
-
 
 (defn unlisten!
   []
@@ -51,15 +47,16 @@
 
 
 
-(defn main[]
-  (unlisten!)
-  (connection/init)
-  (setup-input!)
-
+(defn main []
   ;; Mount views:
+  (om/root editor-view app-state
+           {:target ($/by-id "editor")})
 
+  #_
   (om/root room-view app-state
            {:target ($/by-id "loc_mount")})
+
+  #_
   (om/root sidebar-view app-state
            {:target ($/by-id "sidebar")}))
 
@@ -68,4 +65,6 @@
   (main))
 
 (defn init []
+  (connection/init)
+  (setup-input!)
   (main))

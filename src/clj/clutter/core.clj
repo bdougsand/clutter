@@ -8,14 +8,16 @@
             [clutter.commands :as cmd]
             [clutter.config :as config]
             [clutter.db :as db]
+            [clutter.dev.routes :refer [dev-routes doc-view]]
             [clutter.messages :as msg]
             [clutter.templates :as t]
             [clutter.utils :as $ :refer [wrap-exceptions wrap-log]]
-            [compojure.core :refer [defroutes GET POST rfn]]
+            [compojure.core :refer [context defroutes GET POST rfn]]
             [compojure.route :refer [resources]]
             [com.stuartsierra.component :as component]
             [environ.core :refer [env]]
             [org.httpkit.server :refer [run-server]]
+            [ring.middleware.json :refer [wrap-json-response]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.session :refer [wrap-session]]
@@ -166,12 +168,14 @@
                                                               :name))))
   (GET "/login" req (friend/logout login-view))
   (GET "/logout" req (friend/logout* (response/redirect "/login")))
+  (wrap-json-response (GET "/docs" req doc-view))
+  #_dev-routes
 
   ;; Web socket:
   (GET "/connect" req (connect req))
   (resources "/"))
 
-(def app (-> clutter
+(def app (-> #'clutter
              wrap-log
              (friend/authenticate {:allow-anon? true
                                    :login-uri "/login"

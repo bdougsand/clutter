@@ -13,6 +13,7 @@
                  [ring "1.4.0"]
                  [environ "1.0.1"]
                  [ring/ring-core "1.3.2"]
+                 [ring-transit "0.1.4"]
                  [http-kit "2.1.18"]
                  [compojure "1.4.0"]
                  [enlive "1.1.6"]
@@ -23,7 +24,11 @@
                  ;; JS:
                  [cljsjs/codemirror "5.7.0-1"]
 
-                 [com.stuartsierra/component "0.3.0"]]
+                 [com.stuartsierra/component "0.3.0"]
+                 [figwheel-sidecar "0.4.1"]
+                 [org.clojure/tools.reader "0.9.2"]
+                 [cljs-http "0.1.37"]
+                 [ring/ring-json "0.4.0"]]
 
   :main clutter.core
 
@@ -37,10 +42,10 @@
 
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :figwheel {:on-jsreload "clutter.core/on-js-reload"}
+                        :figwheel {:on-jsload "clutter.core/on-js-reload"}
                         :compiler {:main clutter.core
                                    :asset-path "js/out"
-                                   :output-to "resources/public/js/app.js"
+                                   :output-to "resources/public/js/clutter.js"
                                    :output-dir "resources/public/js/out"
                                    :optimizations :none
                                    :preamble []
@@ -48,7 +53,7 @@
                        {:id "release"
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler {:main clutter.core
-                                   :output-to "resources/public/js/app.js"
+                                   :output-to "resources/public/js/clutter.js"
                                    :optimizations :advanced
                                    :preamble []
                                    :pretty-print false}}]}
