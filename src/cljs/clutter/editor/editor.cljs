@@ -1,10 +1,12 @@
 (ns clutter.editor.editor
-  (:require [cljs.core.async :as async :refer [<!]]
+  (:require [cljs.core.async :as async :refer [<! >! chan put!
+                                               sliding-buffer
+                                               timeout]]
             [cljs.core.async.impl.channels :refer [ManyToManyChannel]]
 
             [cljsjs.codemirror.mode.clojure]
             [cljsjs.codemirror.addon.search.search])
-  (:require-macros [cljs.core.async.macros :refer [go-loop]]))
+  (:require-macros [cljs.core.async.macros :refer [alt! go-loop]]))
 
 (defprotocol PosLike
   (as-pos [this rb]))
@@ -20,6 +22,15 @@
 
   object
   (as-pos [this _] this))
+
+(defprotocol RangeLike
+  (anchor [r])
+  (head [r]))
+
+(extend-protocol RangeLike
+  object
+  (anchor [r] (.-anchor r))
+  (head [r] (.-head r)))
 
 (defprotocol ReadableBuffer
   (get-value [this] [this sep])
@@ -59,8 +70,12 @@
 (defn word-range-at-cursor [wb]
   (word-range-at wb (get-cursor wb)))
 
-(defn word-at [wb]
-  (let [] (get-range wb )))
+(defn word-at [wb wr]
+  (get-range wb (anchor wr) (head wr)))
+
+(defn word-at-pos [wb pos]
+  (let [wr (word-range-at wb pos)]
+    (get-range wb (anchor wr) (head wr))))
 
 (extend-type js/CodeMirror
   ReadableBuffer
@@ -131,9 +146,32 @@
   (update-source [s wb]
     (set-value wb s)))
 
+(defn limit-rate [c ms]
+  (let [out (chan)]
+    (go-loop [v nil, t (timeout ms)]
+      (alt! t ([_]
+               (when v (>! out v))
+               (recur nil (timeout ms)))
+            c ([v]
+               (recur v t))))
+    out))
+
 (defn setup [cm source]
-  (go-loop []
-    (when-let [source-update (<! (update-source cm source))]))
-  (doto cm
-    (.on "cursorActivity" (fn [e]))
-    (.on "changes" (fn [e]))))
+  (let [cursor-chan (limit-rate
+                     (chan (sliding-buffer 1) (map get-cursor))
+                     200)]
+    (when source
+      (go-loop []
+        (when-let [source-update (<! (update-source cm source))]
+          (recur))))
+
+    (go-loop []
+      (let [pos (<! cursor-chan)]
+        (js/console.log "Got new cursor position:" (word-at-pos cm (get-cursor pos))))
+      (recur))
+
+    (doto cm
+      (.on "cursorActivity" (fn [pos]
+                              (put! cursor-chan pos)))
+      #_
+      (.on "changes" (fn [e])))))

@@ -4,7 +4,9 @@
             [goog.dom :as dom]
 
             [om.core :as om :include-macros true]
-            [sablono.core :as html :refer-macros [html]]))
+            [sablono.core :as html :refer-macros [html]]
+
+            [clutter.editor.editor :as ed]))
 
 
 (defn find-backward [cm  ch]
@@ -22,6 +24,7 @@
                     elt
                     #js {:lineNumbers false
                          :mode "clojure"})]
+            (ed/setup cm nil)
             (set! (.-editor js/window) cm))))
 
       om/IRenderState
