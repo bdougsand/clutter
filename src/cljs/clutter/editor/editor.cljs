@@ -3,25 +3,35 @@
                                                sliding-buffer
                                                timeout]]
             [cljs.core.async.impl.channels :refer [ManyToManyChannel]]
+            [cljs.reader :as r]
 
             [cljsjs.codemirror.mode.clojure]
             [cljsjs.codemirror.addon.search.search])
-  (:require-macros [cljs.core.async.macros :refer [alt! go-loop]]))
+  (:require-macros [cljs.core.async.macros :refer [alt! go go-loop]]))
 
 (defprotocol PosLike
   (as-pos [this rb]))
 
+(defprotocol IndexedBuffer
+  (pos-from-index [this idx]))
+
 (extend-protocol PosLike
-  vector
+  cljs.core/PersistentVector
   (as-pos [[line ch] _]
     #js {:line line, :ch ch})
 
   number
   (as-pos [pos rb]
-    (.posFromIndex rb pos))
+    (pos-from-index rb pos))
 
   object
   (as-pos [this _] this))
+
+(defn pos-line [r rb]
+  (.-line (as-pos r rb)))
+
+(defn pos-ch [r rb]
+  (.-ch (as-pos r rb)))
 
 (defprotocol RangeLike
   (anchor [r])
@@ -90,6 +100,10 @@
 
   (first-line-number [cm] (.firstLine cm))
 
+  IndexedBuffer
+  (pos-from-index [cm idx]
+    (.posFromIndex cm idx))
+
   WritableBuffer
   (set-value [cm value]
     (.setValue cm value))
@@ -146,20 +160,34 @@
   (update-source [s wb]
     (set-value wb s)))
 
+(defn wait [c ms]
+  (let [out (chan)]
+    (go
+      (loop [v (<! c)]
+        (let [t (timeout ms)]
+          (alt! c ([v]
+                   (async/close! t)
+                   (recur v))
+                t ([_]
+                   (when (>! out v)
+                     (recur (<! c))))))))
+    out))
+
+
 (defn limit-rate [c ms]
   (let [out (chan)]
-    (go-loop [v nil, t (timeout ms)]
-      (alt! t ([_]
-               (when v (>! out v))
-               (recur nil (timeout ms)))
-            c ([v]
-               (recur v t))))
+    (go-loop []
+      (let [v (loop [v (<! c), t (timeout ms)]
+                (alt! t ([_] v)
+                      c ([v] (recur v t))))]
+        (>! out v))
+      (recur))
     out))
 
 (defn setup [cm source]
-  (let [cursor-chan (limit-rate
-                     (chan (sliding-buffer 1) (map get-cursor))
-                     200)]
+  (let [cursor-in (chan (sliding-buffer 1))
+        cursor-chan (wait cursor-in 200)]
+    #_
     (when source
       (go-loop []
         (when-let [source-update (<! (update-source cm source))]
@@ -167,11 +195,11 @@
 
     (go-loop []
       (let [pos (<! cursor-chan)]
-        (js/console.log "Got new cursor position:" (word-at-pos cm (get-cursor pos))))
+        (js/console.log (get-cursor pos))
+        (js/console.log "Word:" (word-at-pos cm (get-cursor pos))))
       (recur))
 
     (doto cm
-      (.on "cursorActivity" (fn [pos]
-                              (put! cursor-chan pos)))
+      (.on "cursorActivity" #(put! cursor-in %))
       #_
       (.on "changes" (fn [e])))))

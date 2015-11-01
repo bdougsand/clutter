@@ -2,18 +2,32 @@
   (:require [clojure.string :as str]
             [clutter.editor.editor :as ed]))
 
-(extend-protocol ed/ReadableBuffer
-  cljs.core/PersistentVector
+(extend-type cljs.core/PersistentVector
+  ed/IndexedBuffer
+  (pos-from-index [v idx]
+    (loop [li 0, idx idx]
+      (when-let [line (nth v li)]
+        (let [ll (.-length line)]
+          (cond (> idx ll)
+                (recur (inc li) (- idx ll))
+
+                (= idx ll)
+                #js {:line (inc li) :ch 0}
+
+                :default
+                #js {:line li, :ch idx})))))
+
+  ed/ReadableBuffer
   (get-value
       ([v] (str/join "\n" v))
       ([v sep]
        (str/join sep v)))
   (get-range
       ([v from to sep]
-       (let [ls (ed/range-line from v)
-             le (ed/range-line to v)
-             cs (ed/range-ch from v)
-             ce (ed/range-ch to v)]
+       (let [ls (ed/pos-line from v)
+             le (ed/pos-line to v)
+             cs (ed/pos-ch from v)
+             ce (ed/pos-ch to v)]
          (if (= le ls)
            (subs (nth v ls) cs ce)
 
@@ -60,8 +74,10 @@
             (when-let [l (ed/get-line rb li)]
               (recur li (dec (.-length l)) l))))))))
 
-(defn rfind [rf]
+(defn rfind-seq
+  [rf]
   )
 
 (defn rfind-char [rb pos ch]
-  )
+  (let [rf (->ReverseFind rb nil (ed/pos-line pos rb) (ed/pos-ch pos rb))]
+    (.find-prev rf #(= % ch))))
