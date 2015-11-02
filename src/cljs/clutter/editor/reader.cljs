@@ -1,32 +1,34 @@
 (ns clutter.editor.reader
-  (:require [cljs.reader :as r]))
+  (:require [cljs.reader :as r]
 
-(defn get-range [cm pos]
-  (.posFromIndex cm pos))
+            [clutter.editor.editor :as ed]))
 
-(deftype CMReader [cm ^:mutable pos]
+(deftype RBReader [rb ^:mutable li ^:mutable ci ^:mutable line]
   r/PushbackReader
   (read-char [this]
-    (let [new-pos (inc pos)
-          s (.getRange cm (get-range cm pos)
-                       (get-range cm new-pos))]
-      s))
+    (when-not line
+      (set! line (ed/get-line rb li)))
+    (when line
+      (let [ll (.-length line)
+            ch (if (>= ci ll) "\n" (aget line ci))]
+        (if (>= ci (.-length line))
+          (do (set! ci 0)
+              (set! li (inc li))
+              (set! line nil))
+          (set! ci (inc ci)))
+        ch)))
 
   (unread [this ch]
-    (set! pos (dec pos)))
+    (if (= ci 0)
+      (let [nli (dec li)
+            nline (ed/get-line rb nli)]
+        (when nline
+          (set! line nline)
+          (set! ci (dec (.-length nline)))
+          (set! li nli)))
+      (set! ci (dec li)))))
 
-  ;; r/IndexingReader
-  ;; (get-line-number [this]
-  ;;   (.-line (get-range cm pos)))
-
-  ;; (get-column-number [this]
-  ;;   (.ch (get-range cm pos)))
-
-  ;; (get-file-name [this]
-  ;;   (:title this "untitled"))
-  )
-
-(defn cm-reader
-  "Creates a new reader from the given CodeMirror instance."
-  [cm]
-  (->CMReader cm 0))
+(defn rb-reader
+  "Creates a new reader from the given ReadableBuffer."
+  [rb]
+  (->RBReader rb 0 0 nil))

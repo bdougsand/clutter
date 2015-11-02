@@ -42,18 +42,20 @@
       ([v from to]
        (ed/get-range v from to "\n")))
   (get-line [v i]
-    (nth v i))
+    (when (and (>= i 0) (< i (count v)))
+      (nth v i)))
   (last-line-number [v]
     (dec (count v)))
   (first-line-number [v]
     0))
 
-(deftype ReverseFind [rb ^:mutable line
+(deftype ReverseFind [rb pred
+                      ^:mutable line
                       ^:mutable lindex
                       ^:mutable cindex]
   Object
   ;; Find the previous occurrence of a character:
-  (find-prev [this pred]
+  (find-prev [this]
     (let [ll (ed/last-line-number rb)]
       (loop [li lindex, ci cindex, l line]
         (when (and (>= li 0) (<= li ll))
@@ -75,9 +77,16 @@
               (recur li (dec (.-length l)) l))))))))
 
 (defn rfind-seq
-  [rf]
-  )
+  ([rf]
+   (take-while identity (repeatedly #(.find-prev rf))))
+  ([rb pos ch]
+   (rfind-seq (->ReverseFind rb #(= % ch) nil
+                             (ed/pos-line pos rb)
+                             (ed/pos-ch pos rb)))))
 
 (defn rfind-char [rb pos ch]
-  (let [rf (->ReverseFind rb nil (ed/pos-line pos rb) (ed/pos-ch pos rb))]
-    (.find-prev rf #(= % ch))))
+  (let [rf (->ReverseFind rb #(= % ch)
+                          nil
+                          (ed/pos-line pos rb)
+                          (ed/pos-ch pos rb))]
+    (.find-prev rf)))

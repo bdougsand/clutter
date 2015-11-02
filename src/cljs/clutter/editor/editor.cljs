@@ -6,7 +6,10 @@
             [cljs.reader :as r]
 
             [cljsjs.codemirror.mode.clojure]
-            [cljsjs.codemirror.addon.search.search])
+            #_[cljsjs.codemirror.addon.search.search]
+
+            [clutter.editor.search :as s]
+            [clutter.editor.reader :as edr])
   (:require-macros [cljs.core.async.macros :refer [alt! go go-loop]]))
 
 (defprotocol PosLike
@@ -194,7 +197,10 @@
           (recur))))
 
     (go-loop []
-      (let [pos (<! cursor-chan)]
+      (let [pos (<! cursor-chan)
+            ;; Position of the previous
+            ]
+
         (js/console.log (get-cursor pos))
         (js/console.log "Word:" (word-at-pos cm (get-cursor pos))))
       (recur))
