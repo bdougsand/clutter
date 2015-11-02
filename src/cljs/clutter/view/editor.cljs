@@ -8,12 +8,6 @@
 
             [clutter.editor.editor :as ed]))
 
-
-(defn find-backward [cm  ch]
-  )
-
-(defn read-symbol [cm ])
-
 (defn editor-view [app owner]
   (reify
       om/IDidMount
