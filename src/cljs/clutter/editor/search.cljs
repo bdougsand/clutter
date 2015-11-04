@@ -86,16 +86,27 @@
   (get-pos [this]
     #js {:line lindex, :ch cindex}))
 
-(defn pair-scanner [r inc-pred dec-pred]
-  (loop [n 0, spos nil]
+(defn pair-scanner
+  "Scan forward through the reader r until the reader encounters an
+  unmatched pair, or until the end is reached. Returns a vector of [<"
+  [r inc-pred dec-pred]
+  (loop [n 0, starts {}, complete []]
     (let [p (b/as-pos r nil)
           ch (r/read-char r)]
-      (when ch
-        (cond (inc-pred ch) (recur (inc n) (when (= 0 n) p))
+      (if ch
+        (cond (inc-pred ch) (recur (inc n) (assoc starts (inc n) p) complete)
 
-              (dec-pred ch) (if (= n 1) [spos p] (recur (dec n) spos))
+              (dec-pred ch) (if (= n 0)
+                              ;; Unmatched pair found:
+                              [p complete]
+                              ;; Close a pair:
+                              (recur (dec n)
+                                     (dissoc starts n)
+                                     (conj complete [(starts n) p])))
 
-              :else (recur n spos))))))
+              :else (recur n starts complete))
+
+        [ nil complete]))))
 
 (defn parens-scanner [r]
   (pair-scanner r #(= % "(") #(= % ")")))

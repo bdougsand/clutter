@@ -43,6 +43,7 @@
   (getPos [this]
     #js {:line li :ch ci}))
 
+#_
 (defn reader
   ([rb]
    (r/push-back-reader (edb/get-value rb)))
@@ -55,7 +56,7 @@
   [r]
   (r/read r false :eof false))
 
-(defn reader-cl
+(defn reader
   "Creates a new reader from the given ReadableBuffer."
   ([rb]
    (->RBReader rb 0 0 nil))
