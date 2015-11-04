@@ -26,6 +26,13 @@
 (defn pos-ch [p rb]
   (.-ch (as-pos p rb)))
 
+(defn dec-pos [p rb]
+  (if (= (.-ch p) 0)
+    #js {:ch (.-length (get-line rb (dec (.-line p))))
+         :line (dec (.-line p))}
+    #js {:ch (dec (.-ch p))
+         :line (.-line p)}))
+
 (defprotocol RangeLike
   (anchor [r])
   (head [r]))

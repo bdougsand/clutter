@@ -14,9 +14,17 @@
          (map #(dissoc % :line :column :file :ns)))
    (all-vars)))
 
+(defn add-type [v m]
+  (assoc m
+         :type (if (not (bound? v))
+                 :unbound
+
+                 (let [vv (deref v)]
+                   (if (fn? vv) :function (.getSimpleName vv))))))
+
 (defn add-arg-docs [v]
-  (into {} (comp cat
-                 (filter meta)
-                 (map (fn [s]
-                        [s (meta s)])))
-        (:arglists v)))
+  (assoc v :args (into {} (comp cat
+                                (filter meta)
+                                (map (fn [s]
+                                       [s (meta s)])))
+                       (:arglists v))))

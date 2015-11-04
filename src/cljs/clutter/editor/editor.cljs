@@ -5,8 +5,10 @@
             [cljs.reader :as r]
 
             [cljsjs.codemirror.mode.clojure]
+            [cljsjs.codemirror.addon.edit.closebrackets]
 
             [clutter.editor.buffer :as b :refer [as-pos]]
+            [clutter.editor.docs :as docs]
             [clutter.editor.search :as s]
             [clutter.editor.reader :as edr])
   (:require-macros [cljs.core.async.macros :refer [alt! go go-loop]]))
@@ -71,7 +73,10 @@
 
 (defn setup [cm source]
   (let [cursor-in (chan (sliding-buffer 1))
-        cursor-chan (wait cursor-in 200)]
+        cursor-chan (wait cursor-in 200)
+        docs (docs/default-docs)]
+    (.setOption cm "autoCloseBrackets" true)
+    (.setOption cm "matchBrackets" true)
     #_
     (when source
       (go-loop []
@@ -80,10 +85,13 @@
 
     (go-loop []
       (let [pos (<! cursor-chan)
-            ;; Position of the previous
-            ]
-        (js/console.log (prn-str (s/enclosing-form cm (b/get-cursor pos))))
-        (js/console.log "Word:" (b/word-at-pos cm (b/get-cursor pos))))
+            form (s/enclosing-form cm (b/get-cursor pos))
+            word (b/word-at-pos cm (b/get-cursor pos))]
+        (when (list? form)
+          (js/console.log "Retrieving docs for:" (str (first form)))
+          (let [doc (<! (docs/docs-for-symbol docs (first form)))]
+            (when doc
+              (js/console.log "Docs:" (prn-str doc))))))
       (recur))
 
     (doto cm

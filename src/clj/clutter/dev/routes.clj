@@ -11,7 +11,8 @@
 (defn symbol-info [s]
   (some-> (public-vars (symbol s))
           (meta)
-          (dissoc :ns :added :line :column :file)))
+          (dissoc :ns :added :line :column :file)
+          (assoc (docs/add-arg-docs))))
 
 (defn doc-view [req]
   (response (symbol-info (-> req :params :symbol))))

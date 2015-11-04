@@ -2,6 +2,10 @@
   (:require [clojure.string :as str]
             [cljs.reader :as r]
 
+            [cljsjs.codemirror.addon.edit.closebrackets]
+            [cljsjs.codemirror.addon.edit.matchbrackets]
+            [cljsjs.codemirror.addon.search.searchcursor]
+
             [clutter.editor.buffer :as b]
             [clutter.editor.reader :as edr]))
 
@@ -80,7 +84,21 @@
               (recur li (dec (.-length l)) l)))))))
 
   (get-pos [this]
-    #js {:line li, :ch ci}))
+    #js {:line lindex, :ch cindex}))
+
+(defn pair-scanner [r inc-pred dec-pred]
+  (loop [n 0, spos nil]
+    (let [p (b/as-pos r nil)
+          ch (r/read-char r)]
+      (when ch
+        (cond (inc-pred ch) (recur (inc n) (when (= 0 n) p))
+
+              (dec-pred ch) (if (= n 1) [spos p] (recur (dec n) spos))
+
+              :else (recur n spos))))))
+
+(defn parens-scanner [r]
+  (pair-scanner r #(= % "(") #(= % ")")))
 
 (defn rfind-seq
   ([rf]
@@ -97,10 +115,39 @@
                           (b/pos-ch pos rb))]
     (.find-prev rf)))
 
+
+
+(defn get-next [sc]
+  (when (.findNext sc) [(.from sc) (.to sc)]))
+
+(defn get-prev [sc]
+  (when (.findPrevious sc) [(.from sc) (.to sc)]))
+
+(defn get-matches
+  [sc f]
+  (when-let [x (f sc)]
+    (cons x (lazy-seq (get-matches sc)))))
+
+(defn find-matches
+  ([cm query pos ci]
+   (get-matches (.getSearchCursor cm query pos ci) get-next)))
+
+#_
 (defn enclosing-form
   "Given a position inside the readable buffer, find the enclosing list
   form."
   ([rb pos]
-   (edr/read-form (edr/reader rb (rfind-char rb pos "("))))
+   (when-let [rpos (rfind-char rb pos "(")]
+     (edr/read-form (edr/reader rb rpos))))
   ([rb]
    (enclosing-form rb (b/get-cursor rb))))
+
+(defn enclosing-form
+  ([cm pos]
+   (when-let [to (ffirst (find-matches cm ")" pos false))]
+     (js/console.log to)
+     (when-let [match (.findMatchingBracket cm to)]
+       (js/console.log match)
+       (edr/read-form (edr/reader cm (.-to match))))))
+  ([cm]
+   (enclosing-form cm (b/get-cursor cm))))

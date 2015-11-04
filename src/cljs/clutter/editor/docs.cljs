@@ -6,10 +6,21 @@
 (defprotocol DocProvider
   (docs-for-symbol [this sym]))
 
-(defrecord DefaultDocProvider []
+(defprotocol Documentation
+  (doc-symbol [x])
+  )
+
+(defrecord DefaultDocProvider [cache]
   DocProvider
   (docs-for-symbol [this sym]
     (go
-      (let [resp (<! (http/get "/docs/" {:query-params {:symbol sym}}))]
-        (when (= (:status resp) 200)
-          (:body resp))))))
+      (if-let [body (get @cache sym)]
+        body
+
+        (let [resp (<! (http/get "/docs" {:query-params {:symbol (str sym)}}))]
+          (when (= (:status resp) 200)
+            (:body resp)))))))
+
+
+(defn default-docs []
+  (->DefaultDocProvider (atom {})))
