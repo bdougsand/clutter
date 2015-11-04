@@ -88,7 +88,6 @@
             form (s/enclosing-form cm (b/get-cursor pos))
             word (b/word-at-pos cm (b/get-cursor pos))]
         (when (list? form)
-          (js/console.log "Retrieving docs for:" (str (first form)))
           (let [doc (<! (docs/docs-for-symbol docs (first form)))]
             (when doc
               (js/console.log "Docs:" (prn-str doc))))))

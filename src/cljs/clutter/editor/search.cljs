@@ -98,15 +98,19 @@
 
               (dec-pred ch) (if (= n 0)
                               ;; Unmatched pair found:
-                              [p complete]
+                              [(b/as-pos r nil) complete]
                               ;; Close a pair:
                               (recur (dec n)
                                      (dissoc starts n)
-                                     (conj complete [(starts n) p])))
+                                     (conj complete [(starts n) (b/as-pos r nil)])))
 
               :else (recur n starts complete))
 
         [ nil complete]))))
+
+(defn nesting-depth [r inc-pred dec-pred]
+  (loop [n 0, min-n 0, min-pos (b/as-pos r nil)]
+    ))
 
 (defn parens-scanner [r]
   (pair-scanner r #(= % "(") #(= % ")")))
@@ -143,22 +147,11 @@
   ([cm query pos ci]
    (get-matches (.getSearchCursor cm query pos ci) get-next)))
 
-#_
 (defn enclosing-form
-  "Given a position inside the readable buffer, find the enclosing list
-  form."
-  ([rb pos]
-   (when-let [rpos (rfind-char rb pos "(")]
-     (edr/read-form (edr/reader rb rpos))))
-  ([rb]
-   (enclosing-form rb (b/get-cursor rb))))
-
-(defn enclosing-form
+  "Given a CodeMirror instance and a position, find the s-expression "
   ([cm pos]
-   (when-let [to (ffirst (find-matches cm ")" pos false))]
-     (js/console.log to)
-     (when-let [match (.findMatchingBracket cm to)]
-       (js/console.log match)
-       (edr/read-form (edr/reader cm (.-to match))))))
-  ([cm]
-   (enclosing-form cm (b/get-cursor cm))))
+   (let [r (edr/reader cm pos)
+         [unmatched _] (parens-scanner r)]
+     (when unmatched
+       (when-let [match (.findMatchingBracket cm unmatched)]
+         (edr/read-form (edr/reader cm (.-to match))))))))

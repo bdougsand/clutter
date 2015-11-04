@@ -6,6 +6,7 @@
 (defprotocol Peek
   (peek-char [this]))
 
+;; A reader for objects implementing the ReadableBuffer interface.
 (deftype RBReader [rb ^:mutable li ^:mutable ci ^:mutable line]
   Peek
   (peek-char [this]
