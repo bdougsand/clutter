@@ -209,3 +209,12 @@ div.cell {
     height: 50px;
     width: 50px;
 }
+
+
+#documentation .name {
+    font-weight: bold;
+}
+
+#documentation .arglists {
+    font-family: monospace;
+}

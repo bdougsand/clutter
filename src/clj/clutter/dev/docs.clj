@@ -23,8 +23,9 @@
                    (if (fn? vv) :function (.getSimpleName vv))))))
 
 (defn add-arg-docs [v]
-  (assoc v :args (into {} (comp cat
-                                (filter meta)
-                                (map (fn [s]
-                                       [s (meta s)])))
+  (assoc v :args (into {}
+                       (comp cat
+                             (filter meta)
+                             (map (fn [s]
+                                    [s (meta s)])))
                        (:arglists v))))

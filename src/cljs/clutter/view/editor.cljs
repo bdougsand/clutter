@@ -6,7 +6,23 @@
             [om.core :as om :include-macros true]
             [sablono.core :as html :refer-macros [html]]
 
-            [clutter.editor.editor :as ed]))
+            [clutter.editor.buffer :as b]
+            [clutter.editor.editor :as ed]
+
+            [clutter.utils :as $]))
+
+(defonce docs (atom {} ))
+
+(defn docs-view [docs owner]
+  (om/component
+   (html
+    (when-let [doc (:doc docs)]
+      [:div.docs
+       [:div.name (:name doc)]
+       [:div.arglists
+        (for [alist (:arglists doc)]
+          [:div.arglist (prn-str alist)])]
+       [:div.docs (:doc doc)]]))))
 
 (defn editor-view [app owner]
   (reify
@@ -18,12 +34,18 @@
                     elt
                     #js {:lineNumbers false
                          :mode "clojure"})]
-            (ed/setup cm nil)
+            (ed/setup cm nil (fn [d]
+                               (swap! docs assoc :doc d)))
             (set! (.-editor js/window) cm))))
 
       om/IRenderState
       (render-state [_ _]
         (html
          [:div
-          [:textarea]
-          [:div.docs]]))))
+          [:textarea]]))))
+
+(defn init []
+  (om/root docs-view docs
+           {:target ($/by-id "documentation")}))
+
+(init)

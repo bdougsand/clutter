@@ -71,7 +71,7 @@
     out))
 
 
-(defn setup [cm source]
+(defn setup [cm source doc-fn]
   (let [cursor-in (chan (sliding-buffer 1))
         cursor-chan (wait cursor-in 200)
         docs (docs/default-docs)]
@@ -83,15 +83,17 @@
         (when-let [source-update (<! (update-source cm source))]
           (recur))))
 
-    (go-loop []
-      (let [pos (<! cursor-chan)
-            form (s/enclosing-form cm (b/get-cursor pos))
-            word (b/word-at-pos cm (b/get-cursor pos))]
-        (when (list? form)
-          (let [doc (<! (docs/docs-for-symbol docs (first form)))]
-            (when doc
-              (js/console.log "Docs:" (prn-str doc))))))
-      (recur))
+    (when doc-fn
+      (go-loop []
+        (let [pos (<! cursor-chan)
+              form (s/enclosing-form cm (b/get-cursor pos))
+              word (b/word-at-pos cm (b/get-cursor pos))]
+          (when (list? form)
+            (let [doc (<! (docs/docs-for-symbol docs (first form)))]
+              (when doc
+                (doc-fn doc)
+                (js/console.log "Docs:" (prn-str doc))))))
+        (recur)))
 
     (doto cm
       (.on "cursorActivity" #(put! cursor-in %))

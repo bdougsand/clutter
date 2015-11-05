@@ -6,7 +6,7 @@
             [clutter.connection :as connection :refer [app-state send-message!]]
             [clutter.utils :as $]
             [clutter.view.brief :refer [brief-view]]
-            [clutter.view.editor :refer [editor-view]]
+            [clutter.view.editor :refer [docs-view editor-view]]
             [clutter.view.room :refer [room-view]]
             [clutter.view.sidebar :refer [sidebar-view]]
             [figwheel.client :as fw]
