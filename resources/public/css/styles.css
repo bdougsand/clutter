@@ -210,6 +210,19 @@ div.cell {
     width: 50px;
 }
 
+#ide {
+
+}
+
+#editor {
+    float: left;
+    width: 75%;
+}
+
+#documentation {
+    float: left;
+    width: 200px;
+}
 
 #documentation .name {
     font-weight: bold;

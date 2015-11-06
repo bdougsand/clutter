@@ -8,7 +8,7 @@
             [clutter.commands :as cmd]
             [clutter.config :as config]
             [clutter.db :as db]
-            [clutter.dev.routes :refer [dev-routes doc-view]]
+            [clutter.dev.routes :refer [dev-routes doc-view completions-view]]
             [clutter.messages :as msg]
             [clutter.templates :as t]
             [clutter.utils :as $ :refer [wrap-exceptions wrap-log]]
@@ -169,6 +169,7 @@
   (GET "/login" req (friend/logout login-view))
   (GET "/logout" req (friend/logout* (response/redirect "/login")))
   (wrap-json-response (GET "/docs" req doc-view))
+  (wrap-json-response (GET "/compl" req completions-view))
   #_dev-routes
 
   ;; Web socket:

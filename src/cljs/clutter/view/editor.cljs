@@ -11,6 +11,7 @@
 
             [clutter.utils :as $]))
 
+;; Currently displayed documentation:
 (defonce docs (atom {} ))
 
 (defn docs-view [docs owner]
@@ -42,7 +43,9 @@
       (render-state [_ _]
         (html
          [:div
-          [:textarea]]))))
+          [:textarea
+           "(defn say-my-name [name]
+  (println \"Hello, \" (str name))"]]))))
 
 (defn init []
   (om/root docs-view docs

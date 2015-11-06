@@ -8,6 +8,8 @@
 (defprotocol IndexedBuffer
   (pos-from-index [this idx]))
 
+(def Pos (.-Pos js/CodeMirror))
+
 (extend-protocol PosLike
   cljs.core/PersistentVector
   (as-pos [[line ch] _]
@@ -17,6 +19,13 @@
   (as-pos [pos rb]
     (pos-from-index rb pos))
 
+  Pos
+  (as-pos [this _] this)
+
+  array
+  (as-pos [this _]
+    #js {:line (aget this 0), :ch (aget this 1)})
+
   object
   (as-pos [this _] this))
 
@@ -25,13 +34,6 @@
 
 (defn pos-ch [p rb]
   (.-ch (as-pos p rb)))
-
-(defn dec-pos [p rb]
-  (if (= (.-ch p) 0)
-    #js {:ch (.-length (get-line rb (dec (.-line p))))
-         :line (dec (.-line p))}
-    #js {:ch (dec (.-ch p))
-         :line (.-line p)}))
 
 (defprotocol RangeLike
   (anchor [r])
@@ -90,8 +92,11 @@
 (defn word-range-at-cursor [wb]
   (word-range-at wb (get-cursor wb)))
 
-(defn word-at [wb wr]
-  (get-range wb (anchor wr) (head wr)))
+(defn word-at
+  ([wb wr]
+   (get-range wb (anchor wr) (head wr)))
+  ([wb]
+   (word-at wb (word-range-at-cursor wb))))
 
 (defn word-at-pos [wb pos]
   (let [wr (word-range-at wb pos)]

@@ -6,6 +6,7 @@
 
             [cljsjs.codemirror.mode.clojure]
             [cljsjs.codemirror.addon.edit.closebrackets]
+            [cljsjs.codemirror.addon.hint.show-hint]
 
             [clutter.editor.buffer :as b :refer [as-pos]]
             [clutter.editor.docs :as docs]
@@ -56,7 +57,6 @@
   (word-range-at [cm pos]
     (.findWordAt cm pos)))
 
-
 (defn wait [c ms]
   (let [out (chan)]
     (go
@@ -70,13 +70,14 @@
                      (recur (<! c))))))))
     out))
 
-
 (defn setup [cm source doc-fn]
   (let [cursor-in (chan (sliding-buffer 1))
         cursor-chan (wait cursor-in 200)
         docs (docs/default-docs)]
+
     (.setOption cm "autoCloseBrackets" true)
     (.setOption cm "matchBrackets" true)
+    (.registerHelper js/CodeMirror "wordChars" "clojure" #"[0-9a-zA-Z!$%&*\-+=_/]")
     #_
     (when source
       (go-loop []
