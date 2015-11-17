@@ -31,7 +31,6 @@
                                    locals)
                     :excludes '#{binding aget aset}}]
            (with-redefs [analyzer/get-expander exp]
-             (prn compiler/*source-map-data*)
              (compiler/emit-str (analyzer/analyze env expr)))))))
   ([expr ns-str]
      (build expr ns-str {})))

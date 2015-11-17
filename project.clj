@@ -1,7 +1,7 @@
 (defproject clutter "1.0.0-SNAPSHOT"
   :description "An experiment"
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.145" :scope "provided"]
+                 [org.clojure/clojurescript "1.7.170" :scope "provided"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"
                   :exclusions [org.clojure/core.cache]]
@@ -25,7 +25,7 @@
                  [cljsjs/codemirror "5.7.0-1"]
 
                  [com.stuartsierra/component "0.3.0"]
-                 [figwheel-sidecar "0.4.1"]
+                 [figwheel-sidecar "0.5.0-SNAPSHOT"]
                  [org.clojure/tools.reader "0.9.2"]
                  [cljs-http "0.1.37"]
                  [ring/ring-json "0.4.0"]]
@@ -37,7 +37,7 @@
   :source-paths ["src/clj" "src/cljc"]
 
   :plugins [[lein-cljsbuild "1.1.0"]
-            [lein-figwheel "0.4.1"]
+            [lein-doo "0.1.6-SNAPSHOT"]
             [cider/cider-nrepl "0.9.1"]]
 
   :cljsbuild {:builds [{:id "dev"
@@ -56,7 +56,13 @@
                                    :output-to "resources/public/js/clutter.js"
                                    :optimizations :advanced
                                    :preamble []
-                                   :pretty-print false}}]}
+                                   :pretty-print false}}
+                       {:id "test"
+                        :source-paths ["src" "test"]
+                        :compiler {:output-to "resources/public/js/testable.js"
+                                   :main clutter.runner
+                                   :optimizations :none
+                                   :target :nodejs}}]}
 
   :figwheel {:server-port 3447
              :nrepl-port 3448
@@ -64,7 +70,7 @@
 
              :css-dirs ["resources/public/css"]}
 
-  :profiles {:dev {:plugins [[lein-figwheel "0.4.1"]
+  :profiles {:dev {:plugins [[lein-figwheel "0.5.0-SNAPSHOT"]
                              [refactor-nrepl "1.1.0"]]
                    :env {:dev true
                          :port 3338}}})

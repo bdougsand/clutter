@@ -238,7 +238,6 @@
     prim-seq {:name cljs.core.prim-seq}
     })
 
-
 (def ^:dynamic clutter-names
   '{floor {:name clutter.api.floor}
     ceil {:name clutter.api.ceil}

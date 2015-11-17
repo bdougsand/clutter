@@ -1,33 +1,39 @@
 (ns clutter.api
   "The namespace with functions available to client-side programs.")
 
-(defn floor ^{:export true
-              :user-doc "Rounds down to the nearest integer less than x"}
+(defn ^{:export true
+        :user-doc "Rounds down to the nearest integer less than x"}
+  floor
   [x]
   (.floor js/Math x))
 
-(defn ceil ^{:export true
-             :user-doc "Rounds up to the nearest integer greater than x"}
+(defn ^{:export true
+        :user-doc "Rounds up to the nearest integer greater than x"}
+  ceil
   [x]
   (.ceil js/Math x))
 
-(defn abs ^{:export true
-            :user-doc "Returns the absolute value of x"}
+(defn ^{:export true
+        :user-doc "Returns the absolute value of x"}
+  abs
   [x]
   (.abs js/Math x))
 
-(defn sin ^{:export true
-            :user-doc "Trigonometric sine function"}
+(defn ^{:export true
+        :user-doc "Trigonometric sine function"}
+  sin
   [x]
   (.sin js/Math x))
 
-(defn cos ^{:export true
-            :user-doc "Trigonometric cosine function"}
+(defn ^{:export true
+        :user-doc "Trigonometric cosine function"}
+  cos
   [x]
   (.cos js/Math x))
 
-(defn tan ^{:export true
-            :user-doc "Trigonometric tangent functino"}
+(defn ^{:export true
+        :user-doc "Trigonometric tangent function"}
+  tan
   [x]
   (.tan js/Math x))
 

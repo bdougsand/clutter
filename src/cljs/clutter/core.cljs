@@ -49,14 +49,11 @@
 
 (defn main []
   ;; Mount views:
+  #_
   (om/root editor-view app-state
            {:target ($/by-id "editor")})
-
-  #_
   (om/root room-view app-state
            {:target ($/by-id "loc_mount")})
-
-  #_
   (om/root sidebar-view app-state
            {:target ($/by-id "sidebar")}))
 

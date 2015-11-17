@@ -4,10 +4,15 @@
 (def async-methods
   '#{get-prop get-location get-name get-contents get-type})
 
+(def blacklist
+  '#{aset aget aclone clj->js js->clj})
+
+(def illegal-pattern #"^(\.|js/)")
+
 (defn rewrite-props [form]
   (postwalk (fn [x]
               (if (and (symbol? x) (= (subs (name x) 0 1) "&"))
-                (list 'get-prop 'this (subs (name x) 1))
+                (list 'get-prop 'this (keyword (subs (name x) 1)))
                 x))
             form))
 
@@ -18,10 +23,25 @@
                 x))
             form))
 
+(defn rewrite-js [form]
+  (postwalk (fn [x]
+              (if (symbol? x)
+                (cond
+                  (or (blacklist x)
+                      (re-find illegal-pattern (str x)))
+                  (throw (ex-info "IllegalCall" {:symbol x}))
+
+                  :default x)
+                x))
+            form))
+
+(defn transform [form]
+  (rewrite-js form))
+
 (defn body-transform [form]
-  (list 'go (list '<! (-> form
-                          (rewrite-props)
-                          (rewrite-async)))))
+  (list 'go (-> form
+                (rewrite-props)
+                (rewrite-async))))
 
 (defn prop-transform
   "Transforms the source code for a prop into a function form."

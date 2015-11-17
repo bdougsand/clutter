@@ -1,18 +1,20 @@
 (ns clutter.view.editor
   (:require [cljsjs.codemirror]
-
-            [goog.dom :as dom]
-
-            [om.core :as om :include-macros true]
-            [sablono.core :as html :refer-macros [html]]
-
+            [clojure.string :as str]
             [clutter.editor.buffer :as b]
             [clutter.editor.editor :as ed]
-
-            [clutter.utils :as $]))
+            [clutter.utils :as $]
+            [goog.dom :as dom]
+            [om.core :as om :include-macros true]
+            [sablono.core :as html :refer-macros [html]]))
 
 ;; Currently displayed documentation:
 (defonce docs (atom {} ))
+
+(defn arg-str [x]
+  (cond
+    (string? x) x
+    (coll? x) (str "[" (str/join " " (map arg-str x)) "]")))
 
 (defn docs-view [docs owner]
   (om/component
@@ -22,30 +24,32 @@
        [:div.name (:name doc)]
        [:div.arglists
         (for [alist (:arglists doc)]
-          [:div.arglist (prn-str alist)])]
+          [:div.arglist (arg-str alist)])]
        [:div.docs (:doc doc)]]))))
+
+(defonce editor-value (atom ""))
 
 (defn editor-view [app owner]
   (reify
       om/IDidMount
       (did-mount [_]
-        (let [elt (dom/getFirstElementChild (om/get-node owner))]
-          ;; Set up CodeMirror instance
-          (let [cm (js/CodeMirror.fromTextArea
-                    elt
-                    #js {:lineNumbers false
-                         :mode "clojure"})]
-            (ed/setup cm nil (fn [d]
-                               (swap! docs assoc :doc d)))
-            (set! (.-editor js/window) cm))))
+        (let [elt (dom/getFirstElementChild (om/get-node owner))
+              cm (ed/setup elt nil
+                           (fn [d]
+                             (swap! docs assoc :doc d)))]
+          ;; For debugging:
+          (set! (.-editor js/window) cm)))
 
       om/IRenderState
-      (render-state [_ _]
+      (render-state [_ {:keys [value]}]
         (html
          [:div
           [:textarea
-           "(defn say-my-name [name]
-  (println \"Hello, \" (str name))"]]))))
+           {:value (or value "")
+            :onChange (fn [e]
+                        (println "saving value")
+                        (om/set-state! owner :value
+                                       (.. e -target -value)))}]]))))
 
 (defn init []
   (om/root docs-view docs

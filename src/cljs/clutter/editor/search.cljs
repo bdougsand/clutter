@@ -108,9 +108,25 @@
 
         [ nil complete]))))
 
-(defn nesting-depth [r inc-pred dec-pred]
-  (loop [n 0, min-n 0, min-pos (b/as-pos r nil)]
-    ))
+(defn nesting-depth
+  "Takes a reader for a ReadableBuffer that conforms to PosLike. Reads
+  each character and "
+  [r inc-pred dec-pred]
+  (let [pos-fn (if (satisfies? b/PosLike r)
+                 (fn [_] (b/as-pos r nil))
+                 identity)]
+    (loop [i 0, n 0, min-n 0, min-pos (pos-fn 0)]
+      (if-let [ch (r/read-char r)]
+        (cond
+          (inc-pred ch)
+          (recur (inc i) (inc n) min-n min-pos)
+
+          (dec-pred ch)
+          (recur (inc i) (dec n) (min (dec n) min-n) (if (= n min-n) (pos-fn i) min-pos))
+
+          :else (recur (inc i) n min-n min-pos))
+
+        [min-n min-pos]))))
 
 (defn parens-scanner [r]
   (pair-scanner r #(= % "(") #(= % ")")))

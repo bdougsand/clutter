@@ -1,14 +1,13 @@
 (ns clutter.editor.buffer
-  (:require [cljs.core.async :as async]
-            [cljs.core.async.impl.channels :refer [ManyToManyChannel]]))
+  (:require [cljs.core.async :as async :refer [chan close! put! timeout]]
+            [cljs.core.async.impl.channels :refer [ManyToManyChannel]]
+            [cljsjs.codemirror]))
 
 (defprotocol PosLike
   (as-pos [this rb]))
 
 (defprotocol IndexedBuffer
   (pos-from-index [this idx]))
-
-(def Pos (.-Pos js/CodeMirror))
 
 (extend-protocol PosLike
   cljs.core/PersistentVector
@@ -19,7 +18,7 @@
   (as-pos [pos rb]
     (pos-from-index rb pos))
 
-  Pos
+  js/CodeMirror.Pos
   (as-pos [this _] this)
 
   array
@@ -80,7 +79,6 @@
 (defn append-text [rwb text]
   (insert-at rwb (end-pos rwb) text))
 
-
 (defprotocol SelectableBuffer
   (set-selection [this anchor] [this anchor head])
   (get-cursor [this] [this start])
@@ -102,14 +100,38 @@
   (let [wr (word-range-at wb pos)]
     (get-range wb (anchor wr) (head wr))))
 
-(defprotocol AsyncDataSource
-  (load-data [this])
-  (close! [this]))
+;; Saving and Loading
+(defprotocol Loadable
+  (load-buffer [this f]))
 
-(extend-protocol AsyncDataSource
-  ManyToManyChannel
-  (load-data [this] this)
-  (close! [this] (async/close! this)))
+(defn load [l & [to]]
+  (let [c (chan 1)
+        to-chan (when to (async/timeout to))]
+    (load-buffer l (fn [value]
+                     (put! c value)
+                     (close! c)))
+    (when to
+      (async/take! to-chan (fn [_]
+                             (close! c))))
+
+    c))
+
+(defprotocol Saveable
+  (save-buffer [this contents f]))
+
+(defn save-async [s value]
+  (let [c (chan 1)]
+    (save-buffer s value (fn [value]
+                           (put! c value)
+                           (close! c)))
+    c))
+
+(defn save
+  ([l value f]
+   (save-buffer l value f))
+  ([l value]
+   (save-buffer l value  (fn [_]))))
+
 
 (defprotocol Update
   (update-source [this cm]))

@@ -19,10 +19,10 @@
          :selection #{}}))
 
 (defonce connection (atom nil))
-
 (defonce db-chan (chan (sliding-buffer 1)))
 (defonce db-mult (mult db-chan))
-;(defonce db-pub (pub db-chan key (s)))
+                                        ;(defonce db-pub (pub db-chan key (s)))
+(def pending-gets (atom []))
 
 (defn db-get-cache
   [id]
@@ -30,26 +30,32 @@
 
 (defn db-get
   "Returns a channel that receives "
-  ([id c]
-   (let [result (get-in @app-state [:db-cache id])]
-     ;; Always put something on the channel:
-     ;; (What if the object doesn't exist?
-     (prn "fetching" id)
-     (put! c (or result {}))
-     (when (put! @connection {:dbq id})
-       (go
-         (let [in (tap db-mult (chan (sliding-buffer 1)
-                                     (filter #(contains? % id))))]
+  ([id c conn]
+   (when id
+     (let [result (get-in @app-state [:db-cache id])]
+       ;; Always put something on the channel:
+       ;; (What if the object doesn't exist?
+       (prn "fetching" id)
+       (put! c (or result {}))
+       (if conn
+         (when (put! conn {:dbq id})
+           (go
+             (let [in (tap db-mult (chan (sliding-buffer 1)
+                                         (filter #(contains? % id))))]
 
-           (loop [last result]
-             (let [new-result (get (<! in) id)]
-               (when (or (= new-result last)
-                         (put! c new-result))
-                 (recur new-result))))
-           (close! in)))))
+               (loop [last result]
+                 (let [new-result (get (<! in) id)]
+                   (when (or (= new-result last)
+                             (put! c new-result))
+                     (recur new-result))))
+               (close! in))))
+
+         (swap! pending-gets conj id))))
    c)
+  ([id c]
+   (db-get id c @connection))
   ([id]
-   (db-get id (chan (sliding-buffer 1)))))
+   (db-get id (chan (sliding-buffer 1)) @connection)))
 
 (defn cache-good?
   "Determine if the connection is already receiving updates that will
@@ -96,6 +102,7 @@
       (if-not error
         (do
           (reset! connection ws-channel)
+          ;; Run pending gets
           (loop []
             (let [{m :message, err :error} (<! ws-channel)]
               (when-not err
@@ -107,7 +114,6 @@
 
 (defmulti handle-type :type)
 (defmethod handle-type :default [_] nil)
-
 
 (defn handle-message
   [m]

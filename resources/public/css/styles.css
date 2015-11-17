@@ -229,5 +229,8 @@ div.cell {
 }
 
 #documentation .arglists {
+    border-bottom: 2px solid lightgray;
     font-family: monospace;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
 }

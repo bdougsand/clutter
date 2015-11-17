@@ -1,5 +1,6 @@
 (ns clutter.renderable
-  (:require [goog.string :as string]))
+  (:require [cljs.core :refer [IPrintWithWriter write-all]]
+            [goog.string :as string]))
 
 (defprotocol IEscape
   (escaped [s]))
@@ -7,6 +8,10 @@
 (deftype EscapedString [s]
   IEscape
   (escaped [_] s)
+
+  IPrintWithWriter
+  (-pr-writer [_ writer _opts]
+    (write-all writer "#safe \"" s "\""))
 
   Object
   (toString [_] s))
@@ -24,8 +29,3 @@
 
 (defprotocol IRenderable
   (render [x]))
-
-(defrecord Image [source width height]
-  IRenderable
-  (render [img]
-    #_(mark-safe )))

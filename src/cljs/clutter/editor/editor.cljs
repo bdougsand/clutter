@@ -4,10 +4,13 @@
                                                timeout]]
             [cljs.reader :as r]
 
+            [cljsjs.codemirror]
             [cljsjs.codemirror.mode.clojure]
             [cljsjs.codemirror.addon.edit.closebrackets]
             [cljsjs.codemirror.addon.hint.show-hint]
+            #_[cljsjs.codemirror.dialog.dialog]
 
+            [clutter.editor.autocomplete :as auto]
             [clutter.editor.buffer :as b :refer [as-pos]]
             [clutter.editor.docs :as docs]
             [clutter.editor.search :as s]
@@ -57,6 +60,16 @@
   (word-range-at [cm pos]
     (.findWordAt cm pos)))
 
+(extend-type cljs.core.Atom
+  b/Loadable
+  (load-buffer [atm f]
+    (f @atm))
+
+  b/Saveable
+  (save-buffer [atm value f]
+    (reset! atm value)
+    (f true)))
+
 (defn wait [c ms]
   (let [out (chan)]
     (go
@@ -70,18 +83,34 @@
                      (recur (<! c))))))))
     out))
 
-(defn setup [cm source doc-fn]
+(defn setup [elt source doc-fn]
   (let [cursor-in (chan (sliding-buffer 1))
         cursor-chan (wait cursor-in 200)
-        docs (docs/default-docs)]
+        docs (docs/default-docs)
+        cm (js/CodeMirror.fromTextArea
+            elt
+            #js {:lineNumbers false
+                 :mode "clojure"
+                 :hint auto/do-complete
+                 :autofocus true
+                 :autoCloseBrackets true
+                 :matchBrackets true
+                 :extraKeys #js {"Ctrl-Space" "autocomplete"}})]
 
-    (.setOption cm "autoCloseBrackets" true)
-    (.setOption cm "matchBrackets" true)
-    (.registerHelper js/CodeMirror "wordChars" "clojure" #"[0-9a-zA-Z!$%&*\-+=_/]")
-    #_
-    (when source
+    (doto js/CodeMirror
+      (.registerHelper "wordChars" "clojure" #"[0-9a-zA-Z!$%&*\-+=_/]"))
+
+    (set! (.-save (.-commands js/CodeMirror))
+          (fn [cm]
+            (when (.-save cm)
+              (.save cm))
+            (when (and source (satisfies? b/Saveable source))
+              (b/save source (b/get-value cm)))))
+
+    (when (and source (satisfies? b/Loadable source))
       (go-loop []
-        (when-let [source-update (<! (update-source cm source))]
+        (when-let [update (<! (b/load source))]
+          (b/update-source update cm)
           (recur))))
 
     (when doc-fn
@@ -92,11 +121,8 @@
           (when (list? form)
             (let [doc (<! (docs/docs-for-symbol docs (first form)))]
               (when doc
-                (doc-fn doc)
-                (js/console.log "Docs:" (prn-str doc))))))
+                (doc-fn doc)))))
         (recur)))
 
     (doto cm
-      (.on "cursorActivity" #(put! cursor-in %))
-      #_
-      (.on "changes" (fn [e])))))
+      (.on "cursorActivity" #(put! cursor-in %)))))
