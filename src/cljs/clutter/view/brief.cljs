@@ -6,7 +6,8 @@
             [sablono.core :as html :refer-macros [html]]
 
             [clutter.connection :refer [db-get]]
-            [clutter.db :as db])
+            [clutter.db :as db]
+            [clutter.render.canvas :as canvas])
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
 (defn brief-multi-view

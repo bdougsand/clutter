@@ -6,8 +6,26 @@
             [sablono.core :as html :refer-macros [html]]
 
             [clutter.connection :refer [db-get]]
-            [clutter.view.brief :refer [brief-view]])
+            [clutter.view.brief :refer [brief-view]]
+            [clutter.render.canvas :as canvas])
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
+
+(defn render-view [app owner]
+  (reify
+      om/IDidMount
+    (did-mount [_]
+      (let [elt (om/get-node owner)]
+        (canvas/render-canvas
+         [(->> (canvas/circle 50 50 40)
+                (canvas/stroke :red)
+                (canvas/line-width 5))
+          (canvas/stroke :green
+                         (canvas/circle 25))]
+         elt)))
+
+    om/IRender
+    (render [_]
+      (html [:canvas]))))
 
 (defn sidebar-view [app owner]
   (reify
@@ -30,4 +48,6 @@
          [:div.sidebar
           (when-let [selection (some-> what :location)]
 
-            (om/build brief-view app {:state {:dbid selection}}))]))))
+            (om/build brief-view app {:state {:dbid selection}}))
+
+          (om/build render-view nil)]))))
